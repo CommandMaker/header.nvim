@@ -10,6 +10,22 @@ local function get_comment_style()
     return filetypes[ext]
 end
 
+local function add_header_firstline()
+    if vim.bo.filetype == 'php' then
+        vim.api.nvim_buf_set_lines(0, 1, 1, false, {''})
+    end
+end
+
+local function get_header_firstline()
+    local start = 0
+
+    if vim.bo.filetype == 'php' then
+        start = start + 2
+    end
+
+    return start
+end
+
 local function remove_old_headers(comments_table)
     local buf = vim.api.nvim_get_current_buf()
     local total = vim.api.nvim_buf_line_count(buf)
@@ -29,7 +45,8 @@ local function remove_old_headers(comments_table)
         header_end = header_end + 1
     end
 
-    vim.api.nvim_buf_set_lines(buf, 0, header_end, false, {})
+    add_header_firstline()
+    vim.api.nvim_buf_set_lines(buf, get_header_firstline(), header_end + get_header_firstline(), false, {})
 end
 
 function M.add_headers(header)
@@ -114,7 +131,8 @@ function M.add_headers(header)
 
         remove_old_headers(comments_table)
         local commented = comments.comment_headers(new_hrds, comments_table, header.config.use_block_header)
-        vim.api.nvim_buf_set_lines(0, 0, 0, false, commented)
+        add_header_firstline()
+        vim.api.nvim_buf_set_lines(0, get_header_firstline(), get_header_firstline(), false, commented)
     end)
 end
 
@@ -132,7 +150,8 @@ function M.add_license_header(header, opts)
     local comments_table = comments_fn()
     remove_old_headers(comments_table)
     local commented = comments.comment_headers(license_table, comments_table, header.config.use_block_header)
-    vim.api.nvim_buf_set_lines(0, 0, 0, false, commented)
+    add_header_firstline()
+    vim.api.nvim_buf_set_lines(0, get_header_firstline(), get_header_firstline(), false, commented)
 end
 
 function M.update_date_modified(header)
@@ -165,7 +184,7 @@ function M.update_date_modified(header)
     end
 
     if updated then
-        vim.api.nvim_buf_set_lines(buf, 0, header_end, false, vim.list_slice(lines, 1, header_end))
+        vim.api.nvim_buf_set_lines(buf, get_header_firstline(), header_end + get_header_firstline(), false, vim.list_slice(lines, 1, header_end))
     end
 end
 
